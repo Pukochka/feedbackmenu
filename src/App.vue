@@ -1,39 +1,47 @@
 <template>
   <p-header class="header">
     <div class="header_title">Модуль обратная связь</div>
-    <div class="header_options">
-      <p-btn
-        padding="8px 16px"
-        color="transparent"
-        label="Добавить модуль"
-        @click="moduleDial = !moduleDial"
-      />
-    </div>
+    <div class="header_options"></div>
   </p-header>
 
-  <div class="area row justify-center">
-    <pCard
-      class="card"
-      v-for="(item, index) in content.data[0].items"
-      :key="index"
-    >
-      <div class="card_header">{{ item.text }}</div>
-      <div class="card_info"></div>
-      <div class="card_actions">
-        <p-btn color="transparent" @click="deleteDial = !deleteDial"
-          ><div class="card_close"></div
-        ></p-btn>
-        <p-btn
-          padding="4px 16px"
-          color="transparent"
-          label="Настроить"
-          @click="
-            settings = !settings;
-            select = item;
-          "
-        />
-      </div>
-    </pCard>
+  <div class="area">
+    <div class="row items-center justify-between area_content">
+      <div class="area_header">Ваши модули</div>
+    </div>
+    <p-separator />
+    <div class="row content">
+      <p-card
+        class="card row justify-center items-center"
+        v-if="content.data[0].items.length == 0"
+      >
+        <div class="card_default">Пока нет модулей</div>
+      </p-card>
+      <pCard
+        class="card"
+        v-for="(item, index) in content.data[0].items"
+        :key="index"
+      >
+        <div class="card_header">{{ item.text }}</div>
+        <div class="card_info"></div>
+        <div class="card_actions">
+          <p-btn
+            padding="4px 16px"
+            color="transparent"
+            label="Настроить"
+            @click="
+              settings = !settings;
+              select = item;
+            "
+          />
+        </div>
+      </pCard>
+      <p-card
+        @click="moduleDial = !moduleDial"
+        class="card row justify-center items-center hoverable"
+      >
+        <div class="card_default">Добавить модуль</div>
+      </p-card>
+    </div>
   </div>
 
   <feedSettingsDialog
@@ -56,7 +64,7 @@ import pBtn from "./components/pBtn.vue";
 import pCard from "./components/pCard.vue";
 import pHeader from "./components/pHeader.vue";
 // import pDialog from "./components/pDialog.vue";
-// import pSeparator from "./components/pSeparator.vue";
+import pSeparator from "./components/pSeparator.vue";
 
 import deleteDialog from "./components/deleteDialog.vue";
 import newModuleDialog from "./components/createNewModule.vue";
@@ -72,7 +80,7 @@ export default {
     pHeader,
     deleteDialog,
     newModuleDialog,
-    // pSeparator,
+    pSeparator,
   },
   setup() {
     return {
@@ -333,19 +341,6 @@ export default {
     },
   },
   mounted() {
-    this.getUserData(
-      "view",
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null
-    );
     console.log(
       JSON.parse(
         '{"result":true,"data":[{"setting":{"button_hello":"Начать отвечать на вопросы","is_notice":true,"button_cancel":"Отмена","end_message":"Спасибо за ответы, они отправлены администратору","user_limit":1,"period":60,"limit_in_period":60,"template_common":"<b>Вопрос:<\\/b> {TITLE}\\r\\n<b>Ответ:<\\/b> {ANSWERS}","template_answer":"Обратная свя\\u0437ь по сообщению: <b>{TITLE}<\\/b>\\r\\n{ANSWER}"},"items":[{"id":1,"text":"Пришлите файл, пожалуйста","confirm":false,"sort":1,"feedback_id":13,"type":2,"data":{"size":1048579,"extensions":"txt"}},{"id":8,"text":"Как твои дела?","confirm":false,"sort":2,"feedback_id":13,"type":1,"data":{"validator":"","message":""}},{"id":1,"text":"Выберите ответ","confirm":false,"sort":3,"feedback_id":13,"type":3,"data":{"is_multiple":false,"options":[{"text":"Ответ 1","sort":0},{"text":"Ответ 2","sort":1},{"text":"Ответ 3","sort":2}]}}]}]}'
@@ -358,6 +353,16 @@ export default {
 <style lang="scss" scoped>
 .area {
   padding: 65px;
+  &_header {
+    font-size: 22px;
+    font-weight: 500;
+  }
+  &_content {
+    padding: 8px;
+  }
+}
+.content {
+  padding: 10px;
 }
 .header {
   background: #0000001a;
@@ -373,17 +378,34 @@ export default {
   }
 }
 .card {
-  min-width: 20%;
+  min-width: 250px;
+  max-width: 25%;
   margin: 5px;
+  flex-grow: 1;
+  transition: 0.3s background;
+  &.hoverable {
+    cursor: pointer;
+    font-size: 20px;
+    &:hover {
+      background: rgba(0, 0, 0, 0.136);
+    }
+  }
+  &_default {
+    font-weight: 500;
+    padding: 20px;
+  }
   &_header {
     font-size: 20px;
     font-weight: 500;
-    padding: 7px;
+    padding: 14px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
   }
   &_actions {
     display: flex;
     justify-content: flex-end;
-    padding: 4px;
+    padding: 8px;
   }
   &_close {
     width: 20px;
@@ -423,6 +445,14 @@ export default {
 .items {
   &-center {
     align-items: center;
+  }
+}
+@media (max-width: 626px) {
+  .area_content {
+    justify-content: center;
+  }
+  .content {
+    justify-content: center;
   }
 }
 </style>

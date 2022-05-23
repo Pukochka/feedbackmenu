@@ -9,7 +9,7 @@
       </div>
       <!-- <pSeparator /> -->
 
-      <div class="content">
+      <div class="content row">
         <div
           class="content_item"
           v-for="(mod, index) in modules"
@@ -132,6 +132,7 @@ export default {
     border-radius: 8px;
     cursor: pointer;
     transition: 0.2s border, 0.2s background;
+    flex-grow: 1;
     &.select {
       background: rgba(8, 121, 19, 0.145);
       border: 3px solid rgb(8, 121, 20);
@@ -147,10 +148,10 @@ export default {
     padding: 0;
     & > li {
       padding: 4px 8px;
-      background: #ccc;
+      background: #ddd;
       box-shadow: 0 1px 5px #0003, 0 2px 2px #00000024, 0 3px 1px -2px #0000001f;
       color: #333;
-      border-radius: 20px;
+      border-radius: 4px;
       margin: 6px;
       font-size: 14px;
     }
@@ -159,7 +160,7 @@ export default {
 .actions {
   display: flex;
   justify-content: flex-end;
-  padding: 4px;
+  padding: 8px;
 }
 .flex {
   display: flex;

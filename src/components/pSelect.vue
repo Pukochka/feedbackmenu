@@ -53,7 +53,6 @@ export default {
     width: auto;
     flex: 10000 1 0%;
     align-self: stretch;
-    max-width: 250px;
     text-align: center;
     padding: 5px 10px;
     border-radius: 4px;
@@ -87,7 +86,7 @@ export default {
     border-radius: 4px;
     box-shadow: 0 1px 5px #0003, 0 2px 2px #00000024, 0 3px 1px -2px #0000001f;
     &.show {
-      max-height: 200px;
+      max-height: 140px;
     }
     &::-webkit-scrollbar {
       width: 6px;

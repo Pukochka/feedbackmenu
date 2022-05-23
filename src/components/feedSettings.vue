@@ -11,7 +11,7 @@
       <div class="card_container">
         <div class="card_container_item" v-if="render.type == 1">
           <p-input
-            label="Правило валидации"
+            label="Изменить название"
             v-model="text.value"
             :max="text.max"
           />
@@ -32,142 +32,231 @@
             :max="message.max"
           />
           <pInputRequired :model="message" />
+          <p-btn
+            margin="5px 20px"
+            label="Подтверждение"
+            color="transparent"
+            padding="8px 16px"
+            @click="renderSettings.confirm = !renderSettings.confirm"
+            ><div
+              class="check"
+              :class="{ checked: renderSettings.confirm }"
+            ></div
+          ></p-btn>
         </div>
         <div class="card_container_item" v-if="render.type == 2">
-          <div class="file_maxsize">
-            <div class="file_extensions_inner">
-              Максимальный размер файла : {{ size.value }} Mb
-            </div>
-
-            <input
-              type="range"
-              v-model="size.value"
-              :max="size.max"
-              :min="size.min"
-              step="0.01"
+          <div class="file_input">
+            <p-input
+              label="Изменить название"
+              v-model="file.value"
+              :max="file.max"
             />
+            <pInputRequired :model="file" />
           </div>
-          <div class="file_extensions">
-            Выбранное расширение : {{ selectExtensionValue }}
-            <div class="row file_extensions_inner">
-              <p-btn
-                color="transparent"
-                v-for="(ext, index) in extensions"
-                :key="index"
-                :label="ext.name"
-                @click="selectExtension(ext)"
-                :border="ext.select ? '2px solid green' : '2px solid grey'"
+          <div class="row">
+            <div class="file_maxsize full-flex">
+              <div class="">
+                Максимальный размер файла : {{ size.value }} Mb
+              </div>
+
+              <p-slider
+                v-model="size.value"
+                :maxvalue="size.max"
+                :minvalue="size.min"
               />
             </div>
+            <div class="file_extensions full-flex">
+              Выбранное расширение : {{ selectExtensionValue }}
+              <p-select :select="selectExtensionValue">
+                <div
+                  class="file_extensions_inner"
+                  v-for="(ext, index) in extensions"
+                  @click="selectExtension(ext)"
+                  :key="index"
+                >
+                  {{ ext.name }}
+                </div>
+              </p-select>
+            </div>
           </div>
+
+          <p-btn
+            margin="5px 20px"
+            label="Подтверждение"
+            color="transparent"
+            padding="8px 16px"
+            @click="renderSettings.confirm = !renderSettings.confirm"
+            ><div
+              class="check"
+              :class="{ checked: renderSettings.confirm }"
+            ></div
+          ></p-btn>
         </div>
         <div class="card_container_item" v-if="render.type == 3">
           <div class="answers">
             <div class="answers_input">
               <p-input
-                label="Название"
+                label="Изменить название"
                 v-model="answerName.value"
                 :max="answerName.max"
               />
               <pInputRequired :model="answerName" />
             </div>
-
-            <div class="answers_multiple">
-              <p-btn
-                label="Несколько ответов"
-                color="transparent"
-                padding="8px 16px"
-                @click="
-                  renderSettings.is_multiple = !renderSettings.is_multiple
-                "
-                ><div
-                  class="check"
-                  :class="{ checked: renderSettings.is_multiple }"
-                ></div
-              ></p-btn>
-            </div>
           </div>
+          <p-btn
+            margin="5px 20px"
+            label="Несколько ответов"
+            color="transparent"
+            padding="8px 16px"
+            @click="renderSettings.is_multiple = !renderSettings.is_multiple"
+            ><div
+              class="check"
+              :class="{ checked: renderSettings.is_multiple }"
+            ></div
+          ></p-btn>
+          <p-btn
+            margin="5px 20px"
+            label="Подтверждение"
+            color="transparent"
+            padding="8px 16px"
+            @click="renderSettings.confirm = !renderSettings.confirm"
+            ><div
+              class="check"
+              :class="{ checked: renderSettings.confirm }"
+            ></div
+          ></p-btn>
 
           <div class="answers">
+            <div class="row justify-center answers_render_header">
+              Все доступные ответы
+            </div>
             <div class="answers_render">
-              <div class="row justify-center answers_render_header">
-                Все доступные ответы
-              </div>
-
               <div
                 class="answers_render_button"
                 v-for="(item, index) in render.data.options"
                 :key="index"
               >
-                <p-btn
-                  @click="
-                    optionsDelete = !optionsDelete;
-                    selectDeleteOption = item.text;
-                  "
-                  padding="0"
-                  color="transparent"
-                  class="answers_render_inner"
-                  ><div class="answers_render_delete"></div
-                ></p-btn>
-                {{ item.text }}
-              </div>
-              <div class="answer_area row" v-if="newOptionDial">
-                <p-btn
-                  margin="5px"
-                  padding="10px"
-                  color="transparent"
-                  class=""
-                  title="Добавить"
-                >
-                  <div class="answers_render_done"></div>
-                </p-btn>
-                <div class="full-flex">
-                  <p-input
-                    label="Новый ответ"
-                    v-model="newAnswer.value"
-                    :max="newAnswer.max"
-                  />
-                  <pInputRequired :model="newAnswer" />
+                <div class="answers_render_option row">
+                  <p-btn
+                    @click="
+                      optionsDelete = !optionsDelete;
+                      selectDeleteOption = item.text;
+                    "
+                    padding="3px"
+                    color="transparent"
+                    class="answers_render_inner"
+                    ><div class="answers_render_delete"></div
+                  ></p-btn>
+                  <p-btn
+                    @click="
+                      editAnswerDial = !editAnswerDial;
+                      editAnswer.value = item.text;
+                    "
+                    padding="3px"
+                    color="transparent"
+                    class="answers_render_inner"
+                    ><div class="answers_render_edit"></div
+                  ></p-btn>
                 </div>
 
+                <div class="word">
+                  {{ item.text }}
+                </div>
+              </div>
+            </div>
+            <div class="answer_area" v-if="newOptionDial">
+              <div class="full-flex">
+                <p-input
+                  label="Новый ответ"
+                  v-model="newAnswer.value"
+                  :max="newAnswer.max"
+                />
+                <pInputRequired :model="newAnswer" />
+              </div>
+              <div class="row">
                 <p-btn
-                  margin="5px"
-                  padding="10px"
+                  padding="4px 8px"
                   color="transparent"
                   class=""
-                  title="Отмена"
+                  label="Добавить"
+                >
+                </p-btn>
+                <p-btn
+                  padding="4px 8px"
+                  color="transparent"
+                  class=""
+                  label="Отмена"
                   @click="newOptionDial = !newOptionDial"
                 >
-                  <div class="answers_render_delete"></div>
                 </p-btn>
               </div>
-              <p-btn
-                v-if="!newOptionDial"
-                label="Добавить ответ"
-                color="transparent"
-                padding="8px 16px"
-                @click="newOptionDial = !newOptionDial"
-              />
             </div>
+            <p-btn
+              margin="5px 20px"
+              v-if="!newOptionDial"
+              label="Добавить ответ"
+              color="transparent"
+              padding="8px 16px"
+              @click="newOptionDial = !newOptionDial"
+            />
           </div>
         </div>
-        <div class="card_actions">
-          <p-btn
-            padding="4px 16px"
-            color="transparent"
-            label="Закрыть"
-            @click="closeSettings"
-          />
-          <p-btn
-            padding="4px 16px"
-            color="transparent"
-            label="Сохранить"
-            @click="closeSettings"
-          />
-        </div>
+      </div>
+      <p-separator />
+      <div class="card_actions">
+        <p-btn
+          padding="4px 16px"
+          color="transparent"
+          label="Закрыть"
+          @click="closeSettings"
+        />
+        <p-btn
+          padding="4px 16px"
+          color="transparent"
+          label="Удалить"
+          @click="optionsDelete = !optionsDelete"
+        />
+        <p-btn
+          padding="4px 16px"
+          color="transparent"
+          label="Сохранить"
+          @click="closeSettings"
+        />
       </div>
     </pCard>
   </pDownDialog>
+
+  <pDownDialog :model="editAnswerDial">
+    <p-card>
+      <div class="card_header">Изменение ответа</div>
+      <p-separator />
+      <div class="card_container_item" style="padding: 20px">
+        <p-input
+          label="Изменить ответ"
+          v-model="editAnswer.value"
+          :max="editAnswer.max"
+        />
+        <pInputRequired :model="editAnswer" />
+      </div>
+
+      <p-separator />
+      <div class="card_actions">
+        <p-btn
+          padding="4px 16px"
+          color="transparent"
+          label="Закрыть"
+          @click="editAnswerDial = !editAnswerDial"
+        />
+        <p-btn
+          padding="4px 16px"
+          color="transparent"
+          label="Сохранить"
+          @click="editAnswerDial = !editAnswerDial"
+        />
+      </div>
+    </p-card>
+  </pDownDialog>
+
   <deleteDialog
     :model="optionsDelete"
     @closeDelete="closeDialog"
@@ -180,10 +269,12 @@ import { ref } from "vue";
 
 import pBtn from "./pBtn.vue";
 import pCard from "./pCard.vue";
-import pDownDialog from "./pDownDialog.vue";
+import pDownDialog from "./pDialog.vue";
 import pSeparator from "./pSeparator.vue";
 import pInput from "./pInput.vue";
 import pInputRequired from "./pInputRequired.vue";
+import pSelect from "./pSelect.vue";
+import pSlider from "./pSlider.vue";
 
 import deleteDialog from "./deleteDialog.vue";
 
@@ -197,6 +288,8 @@ export default {
     pInput,
     pInputRequired,
     deleteDialog,
+    pSelect,
+    pSlider,
   },
   emits: ["closeSettings"],
   props: {
@@ -213,6 +306,7 @@ export default {
     return {
       newOptionDial: ref(false),
       optionsDelete: ref(false),
+      editAnswerDial: ref(false),
       selectDeleteOption: ref(""),
       selectExtensionValue: ref(""),
       text: ref({
@@ -249,7 +343,19 @@ export default {
           }
         },
         min: 5,
-        max: 20,
+        max: 25,
+      }),
+      file: ref({
+        value: "",
+        required() {
+          if (this.value.length > this.max || this.value.length < this.min) {
+            return false;
+          } else {
+            return true;
+          }
+        },
+        min: 5,
+        max: 30,
       }),
       answerName: ref({
         value: "",
@@ -261,7 +367,7 @@ export default {
           }
         },
         min: 5,
-        max: 20,
+        max: 40,
       }),
       newAnswer: ref({
         value: "",
@@ -273,10 +379,23 @@ export default {
           }
         },
         min: 5,
-        max: 20,
+        max: 40,
+      }),
+      editAnswer: ref({
+        value: "answer",
+        required() {
+          if (this.value.length > this.max || this.value.length < this.min) {
+            return false;
+          } else {
+            return true;
+          }
+        },
+        min: 5,
+        max: 40,
       }),
       renderSettings: ref({
         is_multiple: false,
+        confirm: false,
       }),
       size: ref({
         value: 1,
@@ -330,8 +449,11 @@ export default {
         this.text.value = this.render.text;
         this.message.value = this.render.data.message;
         this.validator.value = this.render.data.validator;
+        this.renderSettings.confirm = this.render.confirm;
       } else if (this.render.type == 2) {
         this.size.value = this.converterToBites;
+        this.file.value = this.render.text;
+        this.renderSettings.confirm = this.render.confirm;
         this.selectExtensionValue = this.extensions.filter(
           (ext) => ext.name == this.render.data.extensions
         )[0].name;
@@ -343,7 +465,9 @@ export default {
         });
       } else if (this.render.type == 3) {
         this.answerName.value = this.render.text;
+        this.editAnswer.value = this.render.text;
         this.renderSettings.is_multiple = this.render.is_multiple;
+        this.renderSettings.confirm = this.render.confirm;
       }
       // else if(this.render.type == 4){
 
@@ -365,8 +489,11 @@ export default {
 .card {
   width: 50%;
   &_header {
-    font-size: 24px;
+    font-size: 22px;
     padding: 7px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
     font-weight: 500;
   }
   &_close {
@@ -384,7 +511,7 @@ export default {
   &_actions {
     display: flex;
     justify-content: flex-end;
-    padding: 4px;
+    padding: 8px;
   }
 }
 .actions {
@@ -400,15 +527,16 @@ export default {
 }
 .file_maxsize,
 .file_extensions {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 15px;
+  padding: 6px;
   &_inner {
     padding: 5px;
   }
 }
-
+.word {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
 .danger {
   font-size: 11px;
   color: red;
@@ -420,18 +548,24 @@ input[type="range"]::-webkit-slider-runnable-track {
   cursor: grabbing;
 }
 .answers {
-  display: flex;
-  align-items: center;
   &_render {
-    padding: 25px 10px 0 10px;
+    padding: 5px 10px 0 10px;
     flex-grow: 1;
-    &_inner {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      left: 10px;
+    max-height: 200px;
+    overflow-y: scroll;
+    &::-webkit-scrollbar {
+      width: 6px;
+      background: rgb(255, 255, 255);
     }
-    &_delete {
+    &::-webkit-scrollbar-thumb {
+      width: 6px;
+      background: rgb(159, 157, 157);
+      border-radius: 5px;
+    }
+    &_delete,
+    &_edit,
+    &_done {
+      padding: 3px;
       width: 20px;
       height: 20px;
       display: flex;
@@ -440,14 +574,17 @@ input[type="range"]::-webkit-slider-runnable-track {
       background-image: url("../assets/close.svg");
       background-size: cover;
     }
+    &_edit {
+      background-image: url("../assets/edit.svg");
+    }
+    &_option {
+      position: absolute;
+      top: 50%;
+      left: 10px;
+      transform: translateY(-50%);
+    }
     &_done {
-      width: 20px;
-      height: 20px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
       background-image: url("../assets/done.svg");
-      background-size: cover;
     }
     &_button {
       position: relative;
@@ -463,6 +600,7 @@ input[type="range"]::-webkit-slider-runnable-track {
       }
     }
     &_header {
+      padding-top: 10px;
       font-size: 14px;
     }
   }
@@ -521,6 +659,16 @@ input[type="range"]::-webkit-slider-runnable-track {
 .items {
   &-center {
     align-items: center;
+  }
+}
+@media (max-width: 768px) {
+  .card {
+    width: 80%;
+  }
+}
+@media (max-width: 424px) {
+  .card {
+    width: 100%;
   }
 }
 </style>
