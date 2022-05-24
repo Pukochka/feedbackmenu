@@ -7,20 +7,28 @@
   <div class="area">
     <div class="row items-center justify-between area_content">
       <div class="area_header">Ваши модули</div>
+      <div class="row">
+        <p-btn
+          v-if="content.length < 10"
+          size="16px"
+          padding="4px 8px"
+          color="transparent"
+          @click="moduleDial = !moduleDial"
+          label="Добавить модуль"
+        >
+        </p-btn>
+        <pSpinner :model="requestWaiting" />
+      </div>
     </div>
     <p-separator />
     <div class="row content">
       <p-card
         class="card row justify-center items-center"
-        v-if="content.data[0].items.length == 0"
+        v-if="content.length == 0"
       >
         <div class="card_default">Пока нет модулей</div>
       </p-card>
-      <pCard
-        class="card"
-        v-for="(item, index) in content.data[0].items"
-        :key="index"
-      >
+      <pCard class="card" v-for="(item, index) in content" :key="index">
         <div class="card_header">{{ item.text }}</div>
         <div class="card_info"></div>
         <div class="card_actions">
@@ -36,6 +44,7 @@
         </div>
       </pCard>
       <p-card
+        v-if="content.length < 10"
         @click="moduleDial = !moduleDial"
         class="card row justify-center items-center hoverable"
       >
@@ -48,25 +57,32 @@
     :model="settings"
     :render="select"
     @closeSettings="closeDialog"
+    @deleteModule="requestDeleteInput"
+    @saveTextInput="requestUpdateInputText"
+    @saveFileInput="requestUpdateInputFile"
+    @saveSelectInput="requestUpdateInputSelect"
+    @addNewOption="requestAddNewOption"
+    @deleteOption="requestDeleteOption"
   />
 
-  <deleteDialog :model="deleteDial" @closeDelete="closeDialog" />
-
-  <newModuleDialog :model="moduleDial" @closeModule="closeDialog" />
+  <newModuleDialog
+    :model="moduleDial"
+    @closeModule="closeDialog"
+    @createNewModule="requestAddNewInput"
+  />
 </template>
 
 <script>
 import axios from "axios";
 
-import { ref } from "vue";
+import { ref, reactive } from "vue";
 
 import pBtn from "./components/pBtn.vue";
 import pCard from "./components/pCard.vue";
 import pHeader from "./components/pHeader.vue";
-// import pDialog from "./components/pDialog.vue";
 import pSeparator from "./components/pSeparator.vue";
+import pSpinner from "./components/pSpinner.vue";
 
-import deleteDialog from "./components/deleteDialog.vue";
 import newModuleDialog from "./components/createNewModule.vue";
 import feedSettingsDialog from "./components/feedSettings.vue";
 
@@ -78,21 +94,18 @@ export default {
     // pDialog,
     pCard,
     pHeader,
-    deleteDialog,
     newModuleDialog,
     pSeparator,
+    pSpinner,
   },
   setup() {
     return {
       moduleDial: ref(false),
       settings: ref(false),
       deleteDial: ref(false),
+      requestWaiting: ref(false),
       select: ref({}),
-      content: ref(
-        JSON.parse(
-          '{"result":true,"data":[{"setting":{"button_hello":"Начать отвечать на вопросы","is_notice":true,"button_cancel":"Отмена","end_message":"Спасибо за ответы, они отправлены администратору","user_limit":1,"period":60,"limit_in_period":60,"template_common":"<b>Вопрос:<\\/b> {TITLE}\\r\\n<b>Ответ:<\\/b> {ANSWERS}","template_answer":"Обратная свя\\u0437ь по сообщению: <b>{TITLE}<\\/b>\\r\\n{ANSWER}"},"items":[{"id":1,"text":"Пришлите файл, пожалуйста","confirm":false,"sort":1,"feedback_id":13,"type":2,"data":{"size":1048579,"extensions":"txt"}},{"id":8,"text":"Как твои дела?","confirm":false,"sort":2,"feedback_id":13,"type":1,"data":{"validator":"","message":""}},{"id":1,"text":"Выберите ответ","confirm":false,"sort":3,"feedback_id":13,"type":3,"data":{"is_multiple":false,"options":[{"text":"Ответ 1","sort":0},{"text":"Ответ 2","sort":1},{"text":"Ответ 3","sort":2}]}}]}]}'
-        )
-      ),
+      content: reactive([]),
     };
   },
   methods: {
@@ -112,6 +125,7 @@ export default {
       select_id,
       sort
     ) {
+      this.requestWaiting = true;
       axios
         .post(
           `https://api.bot-t.ru/v1/bot/message/feedback/${request}?token=1172473489:AAFoRo3JvyXS5c1l5aW5qvOtDzZEQVJvf0w`,
@@ -129,7 +143,16 @@ export default {
           )
         )
         .then((response) => {
+          this.content = [];
           console.log(JSON.parse(response.data));
+          for (let item of JSON.parse(response.data).data[0].items) {
+            this.content.push(item);
+          }
+
+          if (response.status == 200) {
+            this.requestWaiting = false;
+          }
+          console.log(this.content);
         });
     },
     requestAddNewInput(type) {
@@ -332,7 +355,7 @@ export default {
         feedback_id: 1086,
       };
       for (let i = 0; i < params.length; i++) {
-        if (params[i]) {
+        if (params[i] !== null) {
           currentParams[currentNameParams[i]] = params[i];
         }
       }
@@ -341,10 +364,18 @@ export default {
     },
   },
   mounted() {
-    console.log(
-      JSON.parse(
-        '{"result":true,"data":[{"setting":{"button_hello":"Начать отвечать на вопросы","is_notice":true,"button_cancel":"Отмена","end_message":"Спасибо за ответы, они отправлены администратору","user_limit":1,"period":60,"limit_in_period":60,"template_common":"<b>Вопрос:<\\/b> {TITLE}\\r\\n<b>Ответ:<\\/b> {ANSWERS}","template_answer":"Обратная свя\\u0437ь по сообщению: <b>{TITLE}<\\/b>\\r\\n{ANSWER}"},"items":[{"id":1,"text":"Пришлите файл, пожалуйста","confirm":false,"sort":1,"feedback_id":13,"type":2,"data":{"size":1048579,"extensions":"txt"}},{"id":8,"text":"Как твои дела?","confirm":false,"sort":2,"feedback_id":13,"type":1,"data":{"validator":"","message":""}},{"id":1,"text":"Выберите ответ","confirm":false,"sort":3,"feedback_id":13,"type":3,"data":{"is_multiple":false,"options":[{"text":"Ответ 1","sort":0},{"text":"Ответ 2","sort":1},{"text":"Ответ 3","sort":2}]}}]}]}'
-      )
+    this.getUserData(
+      "view",
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
     );
   },
 };

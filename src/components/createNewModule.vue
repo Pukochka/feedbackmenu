@@ -34,7 +34,12 @@
           label="Отмена"
           @click="closeModule"
         />
-        <p-btn padding="4px 16px" color="transparent" label="Добавить" />
+        <p-btn
+          padding="4px 16px"
+          color="transparent"
+          label="Добавить"
+          @click="createNewModule"
+        />
       </div>
     </p-card>
   </p-dialog>
@@ -53,7 +58,7 @@ export default {
     pCard,
     pBtn,
   },
-  emits: ["closeModule"],
+  emits: ["closeModule", "createNewModule"],
   setup() {
     return {
       moduleConfig: ref(0),
@@ -68,13 +73,13 @@ export default {
           header: "Файл",
           options: ["Установить размер", "Выбрать расширение"],
           select: false,
-          type: 1,
+          type: 2,
         },
         {
           header: "Опрос",
           options: ["Добавление вопросов"],
           select: false,
-          type: 1,
+          type: 3,
         },
       ]),
     };
@@ -87,10 +92,10 @@ export default {
     selectModule(item) {
       this.modules.forEach((m) => (m.select = false));
       item.select = !item.select;
-
       this.moduleConfig = item.type;
     },
     createNewModule() {
+      this.closeModule();
       this.$emit("createNewModule", this.moduleConfig);
     },
   },

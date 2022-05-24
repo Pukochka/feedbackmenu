@@ -74,7 +74,7 @@
                   @click="selectExtension(ext)"
                   :key="index"
                 >
-                  {{ ext.name }}
+                  <div class="file_extensions_item">{{ ext.name }}</div>
                 </div>
               </p-select>
             </div>
@@ -133,7 +133,7 @@
             <div class="answers_render">
               <div
                 class="answers_render_button"
-                v-for="(item, index) in render.data.options"
+                v-for="(item, index) in content"
                 :key="index"
               >
                 <div class="answers_render_option row">
@@ -179,6 +179,7 @@
                   color="transparent"
                   class=""
                   label="Добавить"
+                  @click="addNewOption"
                 >
                 </p-btn>
                 <p-btn
@@ -214,13 +215,16 @@
           padding="4px 16px"
           color="transparent"
           label="Удалить"
-          @click="optionsDelete = !optionsDelete"
+          @click="moduleDelete = !moduleDelete"
         />
         <p-btn
           padding="4px 16px"
           color="transparent"
           label="Сохранить"
-          @click="closeSettings"
+          @click="
+            closeSettings();
+            saveSettings();
+          "
         />
       </div>
     </pCard>
@@ -257,10 +261,35 @@
     </p-card>
   </pDownDialog>
 
+  <pDownDialog :model="optionsDelete">
+    <p-card>
+      <div class="card_container">
+        Вы уверены что хотите удалить <b>{{ selectDeleteOption }}</b> ?
+      </div>
+      <div class="card_actions">
+        <p-btn
+          padding="4px 16px"
+          color="transparent"
+          label="Отмена"
+          @click="optionsDelete = !optionsDelete"
+        />
+        <p-btn
+          padding="4px 16px"
+          color="transparent"
+          label="Удалить"
+          @click="deleteOption"
+        />
+      </div>
+    </p-card>
+  </pDownDialog>
+
   <deleteDialog
-    :model="optionsDelete"
+    name="moduleDelete"
+    :input_id="render"
+    :model="moduleDelete"
+    :label="selectDeleteModule"
     @closeDelete="closeDialog"
-    :label="selectDeleteOption"
+    @deleteModule="deleteModule"
   />
 </template>
 
@@ -291,7 +320,15 @@ export default {
     pSelect,
     pSlider,
   },
-  emits: ["closeSettings"],
+  emits: [
+    "closeSettings",
+    "deleteModule",
+    "saveTextInput",
+    "saveFileInput",
+    "saveSelectInput",
+    "addNewOption",
+    "deleteOption",
+  ],
   props: {
     model: {
       type: Boolean,
@@ -302,12 +339,17 @@ export default {
       required: false,
     },
   },
+
   setup() {
     return {
+      content: ref([]),
       newOptionDial: ref(false),
       optionsDelete: ref(false),
+      moduleDelete: ref(false),
       editAnswerDial: ref(false),
       selectDeleteOption: ref(""),
+      selectDeleteModule: ref(""),
+      selectDeleteOptionId: ref(0),
       selectExtensionValue: ref(""),
       text: ref({
         value: "",
@@ -319,7 +361,7 @@ export default {
           }
         },
         min: 5,
-        max: 20,
+        max: 40,
       }),
       validator: ref({
         value: "",
@@ -431,28 +473,75 @@ export default {
     };
   },
   methods: {
-    closeDialog() {
-      this.optionsDelete = !this.optionsDelete;
+    closeDialog(name) {
+      this[name] = !this[name];
     },
     closeSettings() {
       this.$emit("closeSettings", "settings");
+    },
+    deleteModule(id, type) {
+      this.closeSettings();
+      this.$emit("deleteModule", id, type);
+    },
+    deleteOption() {
+      this.closeSettings();
+      this.$emit("deleteOption", this.selectDeleteOptionId);
     },
     selectExtension(item) {
       this.extensions.forEach((ext) => (ext.select = false));
       item.select = true;
       this.selectExtensionValue = item.name;
     },
+    addNewOption() {
+      this.newOptionDial = false;
+      this.$emit("addNewOption", this.render.id, this.newAnswer.value);
+    },
+    saveSettings() {
+      if (this.render.type == 1) {
+        this.$emit(
+          "saveTextInput",
+          this.render.id,
+          this.text.value,
+          this.renderSettings.confirm
+        );
+      } else if (this.render.type == 2) {
+        this.$emit(
+          "saveFileInput",
+          this.render.id,
+          this.file.value,
+          this.renderSettings.confirm,
+          this.size.value * 10e5,
+          this.selectExtensionValue
+        );
+      } else if (this.render.type == 3) {
+        this.$emit(
+          "saveSelectInput",
+          this.render.id,
+          this.answerName.value,
+          this.renderSettings.confirm,
+          this.renderSettings.is_multiple
+        );
+      }
+      // else if(this.render.type == 4){
+
+      // }else if(this.render.type == 5){
+
+      // }
+    },
   },
   watch: {
+    render() {
+      this.content = this.render.data.options;
+    },
     model() {
       if (this.render.type == 1) {
-        this.text.value = this.render.text;
+        this.selectDeleteModule = this.text.value = this.render.text;
         this.message.value = this.render.data.message;
         this.validator.value = this.render.data.validator;
         this.renderSettings.confirm = this.render.confirm;
       } else if (this.render.type == 2) {
         this.size.value = this.converterToBites;
-        this.file.value = this.render.text;
+        this.selectDeleteModule = this.file.value = this.render.text;
         this.renderSettings.confirm = this.render.confirm;
         this.selectExtensionValue = this.extensions.filter(
           (ext) => ext.name == this.render.data.extensions
@@ -464,10 +553,12 @@ export default {
           }
         });
       } else if (this.render.type == 3) {
-        this.answerName.value = this.render.text;
+        this.selectDeleteModule = this.answerName.value = this.render.text;
         this.editAnswer.value = this.render.text;
-        this.renderSettings.is_multiple = this.render.is_multiple;
-        this.renderSettings.confirm = this.render.confirm;
+        this.renderSettings = {
+          is_multiple: this.render.data.is_multiple,
+          confirm: this.render.confirm,
+        };
       }
       // else if(this.render.type == 4){
 
@@ -530,6 +621,13 @@ export default {
   padding: 6px;
   &_inner {
     padding: 5px;
+  }
+  &_item {
+    padding: 4px 0;
+    transition: 0.3s background;
+    &:hover {
+      background: rgba(0, 0, 0, 0.14);
+    }
   }
 }
 .word {
@@ -594,10 +692,7 @@ input[type="range"]::-webkit-slider-runnable-track {
       padding: 8px 16px;
       border-radius: 4px;
       margin: 3px;
-      transition: 0.3s background;
-      &:hover {
-        background: rgba(0, 0, 0, 0.049);
-      }
+      background: rgba(0, 0, 0, 0.049);
     }
     &_header {
       padding-top: 10px;

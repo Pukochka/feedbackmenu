@@ -1,7 +1,9 @@
 <template>
   <p-dialog :model="model">
     <p-card>
-      <div class="content">Вы уверены что хотите удалить {{ label }}?</div>
+      <div class="content">
+        Вы уверены что хотите удалить <b>{{ label }}</b> ?
+      </div>
       <div class="actions">
         <p-btn
           padding="4px 16px"
@@ -9,7 +11,12 @@
           label="Отмена"
           @click="closeDelete"
         />
-        <p-btn padding="4px 16px" color="transparent" label="Удалить" />
+        <p-btn
+          padding="4px 16px"
+          color="transparent"
+          label="Удалить"
+          @click="deleteModule"
+        />
       </div>
     </p-card>
   </p-dialog>
@@ -26,19 +33,31 @@ export default {
     pCard,
     pBtn,
   },
-  emits: ["closeDelete"],
+  emits: ["closeDelete", "deleteModule"],
   setup() {
     return {};
   },
   methods: {
     closeDelete() {
-      this.$emit("closeDelete", "deleteDial");
+      this.$emit("closeDelete", this.name);
+    },
+    deleteModule() {
+      this.closeDelete();
+      this.$emit("deleteModule", this.input_id.id, this.input_id.type);
     },
   },
   mounted() {},
   props: {
     label: {
       type: String,
+      required: false,
+    },
+    name: {
+      type: String,
+      required: false,
+    },
+    input_id: {
+      type: Object,
       required: false,
     },
     model: {
@@ -64,7 +83,7 @@ export default {
 .actions {
   display: flex;
   justify-content: flex-end;
-  padding: 4px;
+  padding: 8px;
 }
 .flex {
   display: flex;

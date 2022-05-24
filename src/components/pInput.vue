@@ -120,7 +120,7 @@ export default {
     transform: translateY(18px) scale(1);
 
     &.active {
-      transform: translateX(-10px) translateY(6px) scale(0.8);
+      transform: translateX(-15px) translateY(6px) scale(0.8);
     }
   }
 }
