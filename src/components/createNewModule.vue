@@ -133,14 +133,14 @@ export default {
   &_item {
     padding: 15px;
     margin: 5px;
-    border: 3px solid #aaa;
+    border: 2px solid #aaa;
     border-radius: 8px;
     cursor: pointer;
     transition: 0.2s border, 0.2s background;
     flex-grow: 1;
     &.select {
       background: rgba(8, 121, 19, 0.145);
-      border: 3px solid rgb(8, 121, 20);
+      border: 2px solid rgb(8, 121, 20);
     }
   }
   &_header {

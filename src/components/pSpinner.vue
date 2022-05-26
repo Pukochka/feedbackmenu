@@ -33,8 +33,8 @@ export default {
 }
 .spinner {
   color: rgb(229, 231, 235);
-  height: 25px;
-  width: 25px;
+  height: 20px;
+  width: 20px;
   fill: #1c64f2;
 }
 .animation-spin {

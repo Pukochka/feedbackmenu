@@ -2,7 +2,12 @@
   <Teleport to="body">
     <div class="dialog full fullscreen" :class="{ show: model }">
       <div class="dialog_backdrop full" :class="{ show: model }"></div>
-      <div class="dialog_inner full fixed" :class="{ show: model }">
+      <div
+        @click="animate"
+        class="dialog_inner full fixed"
+        :class="{ show: model, animate: start }"
+        :style="{ transition: start ? '.1s transform' : '' }"
+      >
         <slot></slot>
       </div>
     </div>
@@ -11,11 +16,29 @@
 <script>
 import { ref } from "vue";
 export default {
-  props: ["model"],
+  props: {
+    model: {
+      type: Boolean,
+      required: false,
+    },
+  },
   setup() {
     return {
       name: ref(false),
+      start: ref(false),
     };
+  },
+  methods: {
+    animate(e) {
+      let a = Array.from(e.path);
+      a.splice(Array.from(e.path).length - 4, 4);
+      if (a.length <= 2) {
+        this.start = true;
+        setTimeout(() => {
+          this.start = false;
+        }, 50);
+      }
+    },
   },
   watch: {},
 };
@@ -29,6 +52,7 @@ export default {
   &.show {
     visibility: visible;
   }
+
   &_backdrop {
     position: fixed;
     z-index: -1;
@@ -50,6 +74,10 @@ export default {
     outline: 0;
     transform: scale(0);
     transition: 0.3s transform;
+    &.animate {
+      transition: 0.1s transform !important;
+      transform: scale(1.01) !important;
+    }
     & > div {
       overflow: auto;
       will-change: scroll-position;

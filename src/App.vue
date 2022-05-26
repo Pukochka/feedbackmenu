@@ -7,7 +7,8 @@
   <div class="area">
     <div class="row items-center justify-between area_content">
       <div class="area_header">Ваши модули</div>
-      <div class="row">
+      <div class="row items-center">
+        <pSpinner :model="requestWaiting" />
         <p-btn
           v-if="content.length < 10"
           size="16px"
@@ -17,20 +18,29 @@
           label="Добавить модуль"
         >
         </p-btn>
-        <pSpinner :model="requestWaiting" />
       </div>
     </div>
     <p-separator />
     <div class="row content">
       <p-card
-        class="card row justify-center items-center"
+        class="card full-width row justify-center items-center"
         v-if="content.length == 0"
       >
         <div class="card_default">Пока нет модулей</div>
       </p-card>
-      <pCard class="card" v-for="(item, index) in content" :key="index">
+      <pCard
+        class="card"
+        :style="{ marginRight: index * 40 + 'px' }"
+        v-for="(item, index) in content"
+        :key="index"
+      >
         <div class="card_header">{{ item.text }}</div>
-        <div class="card_info"></div>
+
+        <div class="card_index_item">{{ index + 1 }}</div>
+
+        <div class="card_info">
+          Тип <b>{{ currentType(item.type) }}</b>
+        </div>
         <div class="card_actions">
           <p-btn
             padding="4px 16px"
@@ -46,7 +56,7 @@
       <p-card
         v-if="content.length < 10"
         @click="moduleDial = !moduleDial"
-        class="card row justify-center items-center hoverable"
+        class="card full-width row justify-center items-center hoverable"
       >
         <div class="card_default">Добавить модуль</div>
       </p-card>
@@ -111,6 +121,20 @@ export default {
   methods: {
     closeDialog(dialog) {
       this[dialog] = !this[dialog];
+    },
+    currentType(type) {
+      if (type == 1) {
+        return "сообщение";
+      } else if (type == 2) {
+        return "файл";
+      } else if (type == 3) {
+        return "опрос";
+      }
+      // else if(type == 4){
+      //   return 'Сообщение'
+      // }else if(type == 5){
+      //   return 'Сообщение'
+      // }
     },
     getUserData(
       request,
@@ -394,6 +418,9 @@ export default {
 }
 .content {
   padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
 }
 .header {
   background: #0000001a;
@@ -409,11 +436,17 @@ export default {
   }
 }
 .card {
-  min-width: 250px;
-  max-width: 25%;
+  width: 100%;
+  max-width: 500px;
   margin: 5px;
   flex-grow: 1;
   transition: 0.3s background;
+  position: relative;
+  border-radius: 30px;
+  &.full-width {
+    max-width: 100%;
+    width: 100%;
+  }
   &.hoverable {
     cursor: pointer;
     font-size: 20px;
@@ -426,17 +459,43 @@ export default {
     padding: 20px;
   }
   &_header {
-    font-size: 20px;
-    font-weight: 500;
-    padding: 14px;
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
+    font-size: 20px;
+    font-weight: 500;
+    padding: 14px;
+
+    z-index: 2;
   }
   &_actions {
     display: flex;
     justify-content: flex-end;
     padding: 8px;
+  }
+  &_index {
+    top: 0;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    position: absolute;
+    z-index: 1;
+    &_item {
+      position: absolute;
+      top: 10px;
+      right: 50px;
+      font-weight: 700;
+      font-size: 52px;
+      color: #aaa;
+    }
+  }
+  &_info {
+    z-index: 2;
+    font-size: 18px;
+    background: #ddd;
+    color: #444;
+    padding: 3px 0;
+    padding-left: 30px;
   }
   &_close {
     width: 20px;

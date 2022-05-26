@@ -1,6 +1,15 @@
 <template>
+  <div
+    class="select_group_close"
+    v-if="multiple && model"
+    @click="model = !model"
+  ></div>
+
   <div class="select_group">
-    <div class="select_group_select" @click="model = !model">
+    <div
+      class="select_group_select"
+      @click="multiple && model ? null : (model = !model)"
+    >
       <div class="select_group_content">
         {{ select }}
       </div>
@@ -8,9 +17,12 @@
       <div
         class="select_group_popup"
         :class="{ show: model }"
-        @click="model = !model"
+        @click="multiple && model ? null : (model = !model)"
       >
-        <div class="select_group_popup_helper" @click="model = !model">
+        <div
+          class="select_group_popup_helper"
+          @click="multiple && model ? null : (model = !model)"
+        >
           <slot></slot>
         </div>
       </div>
@@ -25,7 +37,6 @@ export default {
       model: ref(false),
     };
   },
-  watch: {},
   props: {
     select: {
       type: String,
@@ -35,8 +46,16 @@ export default {
       type: String,
       required: false,
     },
+    multiple: {
+      type: Boolean,
+      required: false,
+    },
   },
-  methods: {},
+  watch: {},
+  methods: {
+    show() {},
+    noShow() {},
+  },
   mounted() {},
 };
 </script>
@@ -73,6 +92,14 @@ export default {
       transform: rotate(0deg);
     }
   }
+  &_close {
+    z-index: 6001;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
   &_popup {
     left: 0;
     top: 100%;
@@ -82,7 +109,7 @@ export default {
     overflow-y: scroll;
     transition: 0.3s ease-in-out max-height;
     background: #fff;
-    z-index: 1;
+    z-index: 6002;
     border-radius: 4px;
     box-shadow: 0 1px 5px #0003, 0 2px 2px #00000024, 0 3px 1px -2px #0000001f;
     &.show {

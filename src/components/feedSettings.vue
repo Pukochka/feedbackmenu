@@ -18,12 +18,21 @@
           <pInputRequired :model="text" />
         </div>
         <div class="card_container_item" v-if="render.type == 1">
-          <p-input
-            label="Правило валидации"
-            v-model="validator.value"
-            :max="validator.max"
-          />
-          <pInputRequired :model="validator" />
+          <div class="card_container_item_inner">
+            <div class="card_container_item_inner">
+              <div class="">Правило валидации</div>
+              <p-select :select="selectValidatorsValue">
+                <div
+                  class="file_extensions_item"
+                  v-for="(valid, index) in validations"
+                  @click="selectValidators(valid)"
+                  :key="index"
+                >
+                  {{ valid.name }}
+                </div>
+              </p-select>
+            </div>
+          </div>
         </div>
         <div class="card_container_item" v-if="render.type == 1">
           <p-input
@@ -66,15 +75,18 @@
               />
             </div>
             <div class="file_extensions full-flex">
-              Выбранное расширение : {{ selectExtensionValue }}
-              <p-select :select="selectExtensionValue">
+              Выбранное расширение : {{ selectExtensionValue.join(", ") }}
+              <p-select multiple :select="selectExtensionValue.join(', ')">
                 <div
                   class="file_extensions_inner"
                   v-for="(ext, index) in extensions"
                   @click="selectExtension(ext)"
                   :key="index"
                 >
-                  <div class="file_extensions_item">{{ ext.name }}</div>
+                  <div class="file_extensions_item">
+                    <div class="check" :class="{ checked: ext.select }"></div>
+                    {{ ext.name }}
+                  </div>
                 </div>
               </p-select>
             </div>
@@ -127,9 +139,7 @@
           ></p-btn>
 
           <div class="answers">
-            <div class="row justify-center answers_render_header">
-              Все доступные ответы
-            </div>
+            <div class="row answers_render_header">Все доступные ответы</div>
             <div class="answers_render">
               <div
                 class="answers_render_button"
@@ -350,7 +360,26 @@ export default {
       selectDeleteOption: ref(""),
       selectDeleteModule: ref(""),
       selectDeleteOptionId: ref(0),
-      selectExtensionValue: ref(""),
+      selectExtensionValue: ref([]),
+      selectValidatorsValue: ref(""),
+      validations: ref([
+        {
+          name: "Номер телефона",
+          validate: "/^(s*)?(+)?([- _():=+]?d[- _():=+]?){10,14}(s*)?$/",
+          default: "Номер телефона указан не верно",
+        },
+        {
+          name: "Почта",
+          validate:
+            "/^((([0-9A-Za-z]{1}[-0-9A-z.]{1,}[0-9A-Za-z]{1})|([0-9А-Яа-я]{1}[-0-9А-я.]{1,}[0-9А-Яа-я]{1}))@([-0-9A-Za-z]{1,}.){1,2}[-A-Za-z]{2,})$/u",
+          default: "Почта указана не верно",
+        },
+        {
+          name: "Ссылка",
+          validate: "/^(https?://)?([w-]{1,32}.[w-]{1,32})[^s@]*$/",
+          default: "Ссылка указана не верно",
+        },
+      ]),
       text: ref({
         value: "",
         required() {
@@ -363,18 +392,6 @@ export default {
         min: 5,
         max: 40,
       }),
-      validator: ref({
-        value: "",
-        required() {
-          if (this.value.length > this.max || this.value.length < this.min) {
-            return false;
-          } else {
-            return true;
-          }
-        },
-        min: 5,
-        max: 20,
-      }),
       message: ref({
         value: "",
         required() {
@@ -385,7 +402,7 @@ export default {
           }
         },
         min: 5,
-        max: 25,
+        max: 40,
       }),
       file: ref({
         value: "",
@@ -435,15 +452,16 @@ export default {
         min: 5,
         max: 40,
       }),
-      renderSettings: ref({
-        is_multiple: false,
-        confirm: false,
-      }),
       size: ref({
         value: 1,
         max: 100,
         min: 0.01,
       }),
+      renderSettings: ref({
+        is_multiple: false,
+        confirm: false,
+      }),
+
       danger: ref({
         extension: false,
         size: false,
@@ -469,6 +487,10 @@ export default {
           select: false,
           name: "png",
         },
+        {
+          select: false,
+          name: "gif",
+        },
       ]),
     };
   },
@@ -488,9 +510,22 @@ export default {
       this.$emit("deleteOption", this.selectDeleteOptionId);
     },
     selectExtension(item) {
-      this.extensions.forEach((ext) => (ext.select = false));
-      item.select = true;
-      this.selectExtensionValue = item.name;
+      if (item.select) {
+        if (this.selectExtensionValue.length == 1) {
+          return;
+        }
+        item.select = false;
+        this.selectExtensionValue = this.selectExtensionValue.filter(
+          (ext) => ext != item.name
+        );
+      } else {
+        item.select = true;
+        this.selectExtensionValue.push(item.name);
+      }
+    },
+    selectValidators(item) {
+      this.selectValidatorsValue = item.name;
+      this.message.value = item.default;
     },
     addNewOption() {
       this.newOptionDial = false;
@@ -511,7 +546,7 @@ export default {
           this.file.value,
           this.renderSettings.confirm,
           this.size.value * 10e5,
-          this.selectExtensionValue
+          this.selectExtensionValue.join(", ")
         );
       } else if (this.render.type == 3) {
         this.$emit(
@@ -536,21 +571,22 @@ export default {
     model() {
       if (this.render.type == 1) {
         this.selectDeleteModule = this.text.value = this.render.text;
-        this.message.value = this.render.data.message;
-        this.validator.value = this.render.data.validator;
+        // this.message.value = this.render.data.message;
         this.renderSettings.confirm = this.render.confirm;
+        this.selectValidatorsValue = this.validations[0].name;
+        this.message.value = this.validations[0].default;
       } else if (this.render.type == 2) {
         this.size.value = this.converterToBites;
         this.selectDeleteModule = this.file.value = this.render.text;
         this.renderSettings.confirm = this.render.confirm;
-        this.selectExtensionValue = this.extensions.filter(
-          (ext) => ext.name == this.render.data.extensions
-        )[0].name;
+        this.selectExtensionValue = this.convertToArray;
         this.extensions.forEach((ext) => {
           ext.select = false;
-          if (ext.name == this.render.data.extensions) {
-            ext.select = true;
-          }
+          this.selectExtensionValue.forEach((val) => {
+            if (val == ext.name) {
+              ext.select = true;
+            }
+          });
         });
       } else if (this.render.type == 3) {
         this.selectDeleteModule = this.answerName.value = this.render.text;
@@ -570,6 +606,22 @@ export default {
   computed: {
     converterToBites() {
       return (this.render.data.size / 1e6).toFixed(2);
+    },
+    convertToArray() {
+      let a = this.render.data.extensions.replace(/,/gi, "");
+      let myindex = 0;
+      let arr = [];
+      let str = "";
+      for (let l of [...a]) {
+        if (l == " ") {
+          myindex++;
+          str = "";
+        } else {
+          str += l;
+          arr[myindex] = str;
+        }
+      }
+      return arr;
     },
   },
   mounted() {},
@@ -597,6 +649,9 @@ export default {
     padding: 7px 7px 0 7px;
     &_item {
       padding-right: 7px;
+      &_inner {
+        padding: 0px 20px;
+      }
     }
   }
   &_actions {
@@ -625,6 +680,11 @@ export default {
   &_item {
     padding: 4px 0;
     transition: 0.3s background;
+    position: relative;
+    &.checked {
+      border-color: #33af50;
+      background-color: #80ed99;
+    }
     &:hover {
       background: rgba(0, 0, 0, 0.14);
     }
@@ -696,7 +756,8 @@ input[type="range"]::-webkit-slider-runnable-track {
     }
     &_header {
       padding-top: 10px;
-      font-size: 14px;
+      font-size: 16px;
+      padding: 0 20px;
     }
   }
   &_multiple {
