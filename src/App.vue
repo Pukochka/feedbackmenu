@@ -28,12 +28,7 @@
       >
         <div class="card_default">Пока нет модулей</div>
       </p-card>
-      <pCard
-        class="card"
-        :style="{ marginRight: index * 40 + 'px' }"
-        v-for="(item, index) in content"
-        :key="index"
-      >
+      <pCard class="card" v-for="(item, index) in content" :key="index">
         <div class="card_header">{{ item.text }}</div>
 
         <div class="card_index_item">{{ index + 1 }}</div>
@@ -41,6 +36,43 @@
         <div class="card_info">
           Тип <b>{{ currentType(item.type) }}</b>
         </div>
+        <div
+          class="card_info"
+          v-if="item.type == 1 && item.data.validator != ''"
+        >
+          <b>{{ currentSettings(item.data.validator) }}</b>
+        </div>
+        <div class="card_info" v-if="item.type == 1 && item.data.message != ''">
+          <b>{{ currentSettings(item.data.message) }}</b>
+        </div>
+        <div class="card_info" v-if="item.type == 2">
+          <b>{{ currentSettings(item.data.extensions) }}</b>
+        </div>
+        <div class="card_info" v-if="item.type == 2">
+          <b>{{ (item.data.size / 10e5).toFixed(2) }} Mb</b>
+        </div>
+        <div class="card_info" v-if="item.type == 3">
+          <div class="row">
+            <div
+              class=""
+              v-if="item.data.options.length == 0"
+              style="font-size: 14px"
+            >
+              Пока нет ответов
+            </div>
+            <div
+              class="card_answer"
+              v-else
+              v-for="(opt, index) in currentCountOptions(item.data.options)"
+              :key="index"
+            >
+              {{ opt.text }}
+            </div>
+          </div>
+
+          <b>{{}} </b>
+        </div>
+
         <div class="card_actions">
           <p-btn
             padding="4px 16px"
@@ -51,6 +83,20 @@
               select = item;
             "
           />
+          <p-btn
+            v-if="index > 0"
+            padding="4px 4pxpx"
+            color="transparent"
+            title="Поднять выше"
+            ><div class="arrow_up"></div
+          ></p-btn>
+          <p-btn
+            v-if="index + 1 != content.length"
+            padding="4px 4pxpx"
+            color="transparent"
+            title="Опустить ниже"
+            ><div class="arrow_down"></div
+          ></p-btn>
         </div>
       </pCard>
       <p-card
@@ -73,6 +119,7 @@
     @saveSelectInput="requestUpdateInputSelect"
     @addNewOption="requestAddNewOption"
     @deleteOption="requestDeleteOption"
+    @editOption="requestUpdateOption"
   />
 
   <newModuleDialog
@@ -136,6 +183,24 @@ export default {
       //   return 'Сообщение'
       // }
     },
+    currentSettings(item) {
+      return [...(item + "")].splice(0, 10).join("") + "...";
+    },
+    currentCountOptions(options) {
+      let currentIndexs = 2;
+      if (options.length == 1) {
+        currentIndexs--;
+      }
+      let arr = [];
+      for (let i = 0; i < currentIndexs; i++) {
+        arr.push(options[i]);
+      }
+      if (options.length > 2) {
+        arr.push({ text: "..." });
+      }
+
+      return arr;
+    },
     getUserData(
       request,
       input_id,
@@ -147,7 +212,9 @@ export default {
       is_multiple,
       option_id,
       select_id,
-      sort
+      sort,
+      validator,
+      message
     ) {
       this.requestWaiting = true;
       axios
@@ -163,18 +230,19 @@ export default {
             is_multiple,
             option_id,
             select_id,
-            sort
+            sort,
+            validator,
+            message
           )
         )
         .then((response) => {
-          this.content = [];
-          console.log(JSON.parse(response.data));
-          for (let item of JSON.parse(response.data).data[0].items) {
-            this.content.push(item);
-          }
-
           if (response.status == 200) {
             this.requestWaiting = false;
+            this.content = [];
+            console.log(JSON.parse(response.data));
+            for (let item of JSON.parse(response.data).data[0].items) {
+              this.content.push(item);
+            }
           }
           console.log(this.content);
         });
@@ -184,6 +252,8 @@ export default {
         "create-input",
         null,
         type,
+        null,
+        null,
         null,
         null,
         null,
@@ -206,10 +276,12 @@ export default {
         null,
         null,
         null,
+        null,
+        null,
         null
       );
     },
-    requestUpdateInputText(input_id, text, confirm) {
+    requestUpdateInputText(input_id, text, confirm, validator, message) {
       this.getUserData(
         "update-input-text",
         input_id,
@@ -221,7 +293,9 @@ export default {
         null,
         null,
         null,
-        null
+        null,
+        validator,
+        message
       );
     },
     requestUpdateInputFile(input_id, text, confirm, size, extensions) {
@@ -233,6 +307,8 @@ export default {
         confirm,
         size,
         extensions,
+        null,
+        null,
         null,
         null,
         null,
@@ -251,6 +327,8 @@ export default {
         is_multiple,
         null,
         null,
+        null,
+        null,
         null
       );
     },
@@ -266,6 +344,8 @@ export default {
         null,
         null,
         select_id,
+        null,
+        null,
         null
       );
     },
@@ -280,6 +360,8 @@ export default {
         null,
         null,
         option_id,
+        null,
+        null,
         null,
         null
       );
@@ -296,6 +378,8 @@ export default {
         null,
         option_id,
         null,
+        null,
+        null,
         null
       );
     },
@@ -311,7 +395,9 @@ export default {
         null,
         null,
         null,
-        sort
+        sort,
+        null,
+        null
       );
     },
     requestModuleDown(sort) {
@@ -326,7 +412,9 @@ export default {
         null,
         null,
         null,
-        sort
+        sort,
+        null,
+        null
       );
     },
     requestOptionDown(option_id) {
@@ -340,6 +428,8 @@ export default {
         null,
         null,
         option_id,
+        null,
+        null,
         null,
         null
       );
@@ -355,6 +445,8 @@ export default {
         null,
         null,
         option_id,
+        null,
+        null,
         null,
         null
       );
@@ -372,6 +464,8 @@ export default {
         "option_id",
         "select_id",
         "sort",
+        "validator",
+        "message",
       ];
 
       let currentParams = {
@@ -390,6 +484,8 @@ export default {
   mounted() {
     this.getUserData(
       "view",
+      null,
+      null,
       null,
       null,
       null,
@@ -437,15 +533,19 @@ export default {
 }
 .card {
   width: 100%;
-  max-width: 500px;
+  max-width: 700px;
   margin: 5px;
   flex-grow: 1;
   transition: 0.3s background;
   position: relative;
   border-radius: 30px;
-  &.full-width {
-    max-width: 100%;
-    width: 100%;
+  &_answer {
+    padding: 2px 8px;
+    margin: 0 3px;
+    border-radius: 4px;
+    background: #aaa;
+    font-size: 14px;
+    font-weight: 400;
   }
   &.hoverable {
     cursor: pointer;
@@ -482,7 +582,7 @@ export default {
     z-index: 1;
     &_item {
       position: absolute;
-      top: 10px;
+      top: 30px;
       right: 50px;
       font-weight: 700;
       font-size: 52px;
@@ -491,16 +591,31 @@ export default {
   }
   &_info {
     z-index: 2;
-    font-size: 18px;
+    font-size: 16px;
     background: #ddd;
     color: #444;
     padding: 3px 0;
     padding-left: 30px;
+    margin: 5px 0;
   }
   &_close {
     width: 20px;
     height: 20px;
     background-image: url("./assets/close.svg");
+    background-size: cover;
+  }
+}
+.arrow {
+  &_up {
+    width: 20px;
+    height: 20px;
+    background-image: url("./assets/arrowUp.svg");
+    background-size: cover;
+  }
+  &_down {
+    width: 20px;
+    height: 20px;
+    background-image: url("./assets/arrowDown.svg");
     background-size: cover;
   }
 }
@@ -543,6 +658,11 @@ export default {
   }
   .content {
     justify-content: center;
+  }
+}
+@media (max-width: 400px) {
+  .card_index_item {
+    right: 10px;
   }
 }
 </style>

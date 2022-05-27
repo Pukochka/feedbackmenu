@@ -143,7 +143,7 @@
             <div class="answers_render">
               <div
                 class="answers_render_button"
-                v-for="(item, index) in content"
+                v-for="(item, index) in render.data.options"
                 :key="index"
               >
                 <div class="answers_render_option row">
@@ -151,6 +151,7 @@
                     @click="
                       optionsDelete = !optionsDelete;
                       selectDeleteOption = item.text;
+                      selectOptionId = item.id;
                     "
                     padding="3px"
                     color="transparent"
@@ -161,6 +162,7 @@
                     @click="
                       editAnswerDial = !editAnswerDial;
                       editAnswer.value = item.text;
+                      selectOptionId = item.id;
                     "
                     padding="3px"
                     color="transparent"
@@ -171,6 +173,23 @@
 
                 <div class="word">
                   {{ item.text }}
+                </div>
+
+                <div class="answers_render_option_right row">
+                  <p-btn
+                    v-if="index > 0"
+                    padding="3px"
+                    color="transparent"
+                    class="answers_render_inner"
+                    ><div class="answers_render_up"></div
+                  ></p-btn>
+                  <p-btn
+                    v-if="index + 1 < render.data.options.length"
+                    padding="3px"
+                    color="transparent"
+                    class="answers_render_inner"
+                    ><div class="answers_render_down"></div
+                  ></p-btn>
                 </div>
               </div>
             </div>
@@ -265,7 +284,10 @@
           padding="4px 16px"
           color="transparent"
           label="Сохранить"
-          @click="editAnswerDial = !editAnswerDial"
+          @click="
+            editAnswerDial = !editAnswerDial;
+            editOption();
+          "
         />
       </div>
     </p-card>
@@ -287,7 +309,10 @@
           padding="4px 16px"
           color="transparent"
           label="Удалить"
-          @click="deleteOption"
+          @click="
+            optionsDelete = !optionsDelete;
+            deleteOption();
+          "
         />
       </div>
     </p-card>
@@ -338,6 +363,7 @@ export default {
     "saveSelectInput",
     "addNewOption",
     "deleteOption",
+    "editOption",
   ],
   props: {
     model: {
@@ -359,10 +385,16 @@ export default {
       editAnswerDial: ref(false),
       selectDeleteOption: ref(""),
       selectDeleteModule: ref(""),
-      selectDeleteOptionId: ref(0),
+      selectOptionId: ref(0),
       selectExtensionValue: ref([]),
       selectValidatorsValue: ref(""),
+      selectValidatorsValidate: ref(""),
       validations: ref([
+        {
+          name: "Нет",
+          validate: "",
+          default: "",
+        },
         {
           name: "Номер телефона",
           validate: "/^(s*)?(+)?([- _():=+]?d[- _():=+]?){10,14}(s*)?$/",
@@ -507,7 +539,11 @@ export default {
     },
     deleteOption() {
       this.closeSettings();
-      this.$emit("deleteOption", this.selectDeleteOptionId);
+      this.$emit("deleteOption", this.selectOptionId);
+    },
+    editOption() {
+      this.closeSettings();
+      this.$emit("editOption", this.selectOptionId, this.editAnswer.value);
     },
     selectExtension(item) {
       if (item.select) {
@@ -526,10 +562,12 @@ export default {
     selectValidators(item) {
       this.selectValidatorsValue = item.name;
       this.message.value = item.default;
+      this.selectValidatorsValidate = item.validate;
     },
     addNewOption() {
       this.newOptionDial = false;
       this.$emit("addNewOption", this.render.id, this.newAnswer.value);
+      this.newAnswer.value = "";
     },
     saveSettings() {
       if (this.render.type == 1) {
@@ -537,7 +575,9 @@ export default {
           "saveTextInput",
           this.render.id,
           this.text.value,
-          this.renderSettings.confirm
+          this.renderSettings.confirm,
+          this.selectValidatorsValidate,
+          this.message.value
         );
       } else if (this.render.type == 2) {
         this.$emit(
@@ -722,7 +762,9 @@ input[type="range"]::-webkit-slider-runnable-track {
     }
     &_delete,
     &_edit,
-    &_done {
+    &_done,
+    &_up,
+    &_down {
       padding: 3px;
       width: 20px;
       height: 20px;
@@ -735,11 +777,23 @@ input[type="range"]::-webkit-slider-runnable-track {
     &_edit {
       background-image: url("../assets/edit.svg");
     }
+    &_up {
+      background-image: url("../assets/arrowUp.svg");
+    }
+    &_down {
+      background-image: url("../assets/arrowDown.svg");
+    }
     &_option {
       position: absolute;
       top: 50%;
       left: 10px;
       transform: translateY(-50%);
+      &_right {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        right: 10px;
+      }
     }
     &_done {
       background-image: url("../assets/done.svg");
