@@ -1,14 +1,26 @@
 <template>
   <pDownDialog :model="model">
     <pCard class="card">
-      <div class="card_header row justify-between">
-        Настройки обратной связи
-        <p-btn color="transparent" @click="closeSettings"
-          ><div class="card_close"></div
-        ></p-btn>
+      <div class="card_header flex justify-between items-center">
+        <div class="row items-center">
+          <p>Настройки обратной связи</p>
+        </div>
+
+        <div class="row items-center">
+          <pSpinner :model="spinner" />
+          <p-btn color="transparent" @click="closeSettings"
+            ><div class="card_close"></div
+          ></p-btn>
+        </div>
       </div>
       <pSeparator />
       <div class="card_container">
+        <div class="status" v-if="!spinner">
+          Все изменения успешно сохранены
+        </div>
+        <div class="status pro" v-if="spinner">
+          Изменение в процессе сохранение
+        </div>
         <div class="card_container_item" v-if="render.type == 1">
           <p-input
             label="Изменить название"
@@ -34,25 +46,31 @@
             </div>
           </div>
         </div>
-        <div class="card_container_item" v-if="render.type == 1">
+        <div
+          class="card_container_item"
+          v-if="render.type == 1 && selectValidatorsEdit == null"
+        >
+          <p-input
+            label="
+              Валидатор, здесь записывается регулярное выражение!
+            "
+            v-model="editValidator.value"
+            :max="editValidator.max"
+          />
+          <pInputRequired :model="editValidator" />
+        </div>
+        <div
+          class="card_container_item"
+          v-if="render.type == 1 && (selectValidatorsEdit == true) | null"
+        >
           <p-input
             label="Сообщение, если неверно"
             v-model="message.value"
             :max="message.max"
           />
           <pInputRequired :model="message" />
-          <p-btn
-            margin="5px 20px"
-            label="Подтверждение"
-            color="transparent"
-            padding="8px 16px"
-            @click="renderSettings.confirm = !renderSettings.confirm"
-            ><div
-              class="check"
-              :class="{ checked: renderSettings.confirm }"
-            ></div
-          ></p-btn>
         </div>
+
         <div class="card_container_item" v-if="render.type == 2">
           <div class="file_input">
             <p-input
@@ -91,18 +109,6 @@
               </p-select>
             </div>
           </div>
-
-          <p-btn
-            margin="5px 20px"
-            label="Подтверждение"
-            color="transparent"
-            padding="8px 16px"
-            @click="renderSettings.confirm = !renderSettings.confirm"
-            ><div
-              class="check"
-              :class="{ checked: renderSettings.confirm }"
-            ></div
-          ></p-btn>
         </div>
         <div class="card_container_item" v-if="render.type == 3">
           <div class="answers">
@@ -115,83 +121,75 @@
               <pInputRequired :model="answerName" />
             </div>
           </div>
-          <p-btn
-            margin="5px 20px"
-            label="Несколько ответов"
-            color="transparent"
-            padding="8px 16px"
-            @click="renderSettings.is_multiple = !renderSettings.is_multiple"
-            ><div
-              class="check"
-              :class="{ checked: renderSettings.is_multiple }"
-            ></div
-          ></p-btn>
-          <p-btn
-            margin="5px 20px"
-            label="Подтверждение"
-            color="transparent"
-            padding="8px 16px"
-            @click="renderSettings.confirm = !renderSettings.confirm"
-            ><div
-              class="check"
-              :class="{ checked: renderSettings.confirm }"
-            ></div
-          ></p-btn>
 
           <div class="answers">
             <div class="row answers_render_header">Все доступные ответы</div>
             <div class="answers_render">
               <div
                 class="answers_render_button"
-                v-for="(item, index) in render.data.options"
-                :key="index"
+                v-if="render.data.options.length == 0"
               >
-                <div class="answers_render_option row">
-                  <p-btn
-                    @click="
-                      optionsDelete = !optionsDelete;
-                      selectDeleteOption = item.text;
-                      selectOptionId = item.id;
-                    "
-                    padding="3px"
-                    color="transparent"
-                    class="answers_render_inner"
-                    ><div class="answers_render_delete"></div
-                  ></p-btn>
-                  <p-btn
-                    @click="
-                      editAnswerDial = !editAnswerDial;
-                      editAnswer.value = item.text;
-                      selectOptionId = item.id;
-                    "
-                    padding="3px"
-                    color="transparent"
-                    class="answers_render_inner"
-                    ><div class="answers_render_edit"></div
-                  ></p-btn>
-                </div>
-
-                <div class="word">
-                  {{ item.text }}
-                </div>
-
-                <div class="answers_render_option_right row">
-                  <p-btn
-                    v-if="index > 0"
-                    padding="3px"
-                    color="transparent"
-                    class="answers_render_inner"
-                    ><div class="answers_render_up"></div
-                  ></p-btn>
-                  <p-btn
-                    v-if="index + 1 < render.data.options.length"
-                    padding="3px"
-                    color="transparent"
-                    class="answers_render_inner"
-                    ><div class="answers_render_down"></div
-                  ></p-btn>
-                </div>
+                Пока что нет ответов!
               </div>
+              <TransitionGroup name="list" tag="div">
+                <div
+                  class="answers_render_button"
+                  v-for="(item, index) in render.data.options"
+                  :key="index"
+                >
+                  <div class="answers_render_option row">
+                    <p-btn
+                      @click="
+                        optionsDelete = !optionsDelete;
+                        selectDeleteOption = item.text;
+                        selectOptionId = item.id;
+                      "
+                      title="Удалить"
+                      padding="3px"
+                      color="transparent"
+                      class="answers_render_inner"
+                      ><div class="answers_render_delete"></div
+                    ></p-btn>
+                    <p-btn
+                      @click="
+                        editAnswerDial = !editAnswerDial;
+                        editAnswer.value = item.text;
+                        selectOptionId = item.id;
+                      "
+                      title="Изменить"
+                      padding="3px"
+                      color="transparent"
+                      class="answers_render_inner"
+                      ><div class="answers_render_edit"></div
+                    ></p-btn>
+                  </div>
+
+                  <div class="word">
+                    {{ item.text }}
+                  </div>
+
+                  <div class="answers_render_option_right row">
+                    <p-btn
+                      @click="optionUp(item.id)"
+                      v-if="index > 0"
+                      padding="3px"
+                      title="Поднять"
+                      color="transparent"
+                      class="answers_render_inner"
+                      ><div class="answers_render_up"></div
+                    ></p-btn>
+                    <p-btn
+                      @click="optionDown(item.id)"
+                      v-if="index + 1 < render.data.options.length"
+                      padding="3px"
+                      color="transparent"
+                      title="Опустить"
+                      class="answers_render_inner"
+                      ><div class="answers_render_down"></div
+                    ></p-btn>
+                  </div>
+                </div>
+              </TransitionGroup>
             </div>
             <div class="answer_area" v-if="newOptionDial">
               <div class="full-flex">
@@ -202,7 +200,7 @@
                 />
                 <pInputRequired :model="newAnswer" />
               </div>
-              <div class="row">
+              <div class="row inner">
                 <p-btn
                   padding="4px 8px"
                   color="transparent"
@@ -223,13 +221,37 @@
             </div>
             <p-btn
               margin="5px 20px"
-              v-if="!newOptionDial"
+              v-if="!newOptionDial && render.data.options.length != 10"
               label="Добавить ответ"
               color="transparent"
               padding="8px 16px"
               @click="newOptionDial = !newOptionDial"
             />
+            <p-btn
+              margin="5px 20px"
+              label="Несколько ответов"
+              color="transparent"
+              padding="8px 16px"
+              @click="renderSettings.is_multiple = !renderSettings.is_multiple"
+              ><div
+                class="check"
+                :class="{ checked: renderSettings.is_multiple }"
+              ></div
+            ></p-btn>
           </div>
+        </div>
+        <div class="card_container_item">
+          <p-btn
+            margin="5px 20px"
+            label="Подтверждение"
+            color="transparent"
+            padding="8px 16px"
+            @click="renderSettings.confirm = !renderSettings.confirm"
+            ><div
+              class="check"
+              :class="{ checked: renderSettings.confirm }"
+            ></div
+          ></p-btn>
         </div>
       </div>
       <p-separator />
@@ -260,7 +282,7 @@
   </pDownDialog>
 
   <pDownDialog :model="editAnswerDial">
-    <p-card>
+    <p-card class="card min">
       <div class="card_header">Изменение ответа</div>
       <p-separator />
       <div class="card_container_item" style="padding: 20px">
@@ -284,17 +306,14 @@
           padding="4px 16px"
           color="transparent"
           label="Сохранить"
-          @click="
-            editAnswerDial = !editAnswerDial;
-            editOption();
-          "
+          @click="editOption"
         />
       </div>
     </p-card>
   </pDownDialog>
 
   <pDownDialog :model="optionsDelete">
-    <p-card>
+    <p-card class="card min">
       <div class="card_container">
         Вы уверены что хотите удалить <b>{{ selectDeleteOption }}</b> ?
       </div>
@@ -309,10 +328,7 @@
           padding="4px 16px"
           color="transparent"
           label="Удалить"
-          @click="
-            optionsDelete = !optionsDelete;
-            deleteOption();
-          "
+          @click="deleteOption"
         />
       </div>
     </p-card>
@@ -339,6 +355,7 @@ import pInput from "./pInput.vue";
 import pInputRequired from "./pInputRequired.vue";
 import pSelect from "./pSelect.vue";
 import pSlider from "./pSlider.vue";
+import pSpinner from "./pSpinner.vue";
 
 import deleteDialog from "./deleteDialog.vue";
 
@@ -354,6 +371,7 @@ export default {
     deleteDialog,
     pSelect,
     pSlider,
+    pSpinner,
   },
   emits: [
     "closeSettings",
@@ -364,9 +382,15 @@ export default {
     "addNewOption",
     "deleteOption",
     "editOption",
+    "optionDown",
+    "optionUp",
   ],
   props: {
     model: {
+      type: Boolean,
+      required: false,
+    },
+    spinner: {
       type: Boolean,
       required: false,
     },
@@ -389,27 +413,38 @@ export default {
       selectExtensionValue: ref([]),
       selectValidatorsValue: ref(""),
       selectValidatorsValidate: ref(""),
+      selectValidatorsEdit: ref(true),
       validations: ref([
         {
           name: "Нет",
           validate: "",
           default: "",
+          edit: false,
+        },
+        {
+          name: "Своe (Рекомендуются необходимые знания)",
+          validate: "",
+          default: "",
+          edit: null,
         },
         {
           name: "Номер телефона",
           validate: "/^(s*)?(+)?([- _():=+]?d[- _():=+]?){10,14}(s*)?$/",
           default: "Номер телефона указан не верно",
+          edit: true,
         },
         {
           name: "Почта",
           validate:
             "/^((([0-9A-Za-z]{1}[-0-9A-z.]{1,}[0-9A-Za-z]{1})|([0-9А-Яа-я]{1}[-0-9А-я.]{1,}[0-9А-Яа-я]{1}))@([-0-9A-Za-z]{1,}.){1,2}[-A-Za-z]{2,})$/u",
           default: "Почта указана не верно",
+          edit: true,
         },
         {
           name: "Ссылка",
           validate: "/^(https?://)?([w-]{1,32}.[w-]{1,32})[^s@]*$/",
           default: "Ссылка указана не верно",
+          edit: true,
         },
       ]),
       text: ref({
@@ -447,6 +482,18 @@ export default {
         },
         min: 5,
         max: 30,
+      }),
+      editValidator: ref({
+        value: "",
+        required() {
+          if (this.value.length > this.max || this.value.length < this.min) {
+            return false;
+          } else {
+            return true;
+          }
+        },
+        min: 5,
+        max: 200,
       }),
       answerName: ref({
         value: "",
@@ -538,12 +585,18 @@ export default {
       this.$emit("deleteModule", id, type);
     },
     deleteOption() {
-      this.closeSettings();
+      this.optionsDelete = !this.optionsDelete;
       this.$emit("deleteOption", this.selectOptionId);
     },
     editOption() {
-      this.closeSettings();
+      this.editAnswerDial = !this.editAnswerDial;
       this.$emit("editOption", this.selectOptionId, this.editAnswer.value);
+    },
+    optionUp(id) {
+      this.$emit("optionUp", id);
+    },
+    optionDown(id) {
+      this.$emit("optionDown", id);
     },
     selectExtension(item) {
       if (item.select) {
@@ -563,6 +616,7 @@ export default {
       this.selectValidatorsValue = item.name;
       this.message.value = item.default;
       this.selectValidatorsValidate = item.validate;
+      this.selectValidatorsEdit = item.edit;
     },
     addNewOption() {
       this.newOptionDial = false;
@@ -606,15 +660,20 @@ export default {
   },
   watch: {
     render() {
-      this.content = this.render.data.options;
+      console.log(this.render);
     },
     model() {
       if (this.render.type == 1) {
         this.selectDeleteModule = this.text.value = this.render.text;
-        // this.message.value = this.render.data.message;
         this.renderSettings.confirm = this.render.confirm;
-        this.selectValidatorsValue = this.validations[0].name;
-        this.message.value = this.validations[0].default;
+        this.selectValidatorsValue = this.validations.filter(
+          (valid) => valid.validate == this.render.data.validator
+        )[0].name;
+        this.message.value = this.render.data.message;
+
+        if (this.selectValidatorsValue == undefined) {
+          this.selectValidatorsValue = this.validations[1].name;
+        }
       } else if (this.render.type == 2) {
         this.size.value = this.converterToBites;
         this.selectDeleteModule = this.file.value = this.render.text;
@@ -671,6 +730,9 @@ export default {
 <style lang="scss" scoped>
 .card {
   width: 50%;
+  &.min {
+    width: 35%;
+  }
   &_header {
     font-size: 22px;
     padding: 7px;
@@ -699,6 +761,17 @@ export default {
     justify-content: flex-end;
     padding: 8px;
   }
+}
+.status {
+  font-size: 14px;
+  font-weight: 400;
+  color: green;
+  &.pro {
+    color: darkgoldenrod;
+  }
+}
+.flex {
+  display: flex;
 }
 .actions {
   &_item {
@@ -745,12 +818,22 @@ export default {
 input[type="range"]::-webkit-slider-runnable-track {
   cursor: grabbing;
 }
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.5s ease;
+}
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: translateX(30px);
+}
 .answers {
   &_render {
     padding: 5px 10px 0 10px;
     flex-grow: 1;
     max-height: 200px;
     overflow-y: scroll;
+    overflow-x: hidden;
     &::-webkit-scrollbar {
       width: 6px;
       background: rgb(255, 255, 255);
@@ -822,6 +905,9 @@ input[type="range"]::-webkit-slider-runnable-track {
     flex-grow: 1;
     margin: 3px;
   }
+}
+.inner {
+  padding: 0 30px;
 }
 .check {
   width: 14px;

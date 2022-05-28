@@ -1,14 +1,13 @@
 <template>
   <p-header class="header">
     <div class="header_title">Модуль обратная связь</div>
-    <div class="header_options"></div>
+    <div class="header_options"><pSpinner :model="requestWaiting" /></div>
   </p-header>
 
   <div class="area">
     <div class="row items-center justify-between area_content">
       <div class="area_header">Ваши модули</div>
       <div class="row items-center">
-        <pSpinner :model="requestWaiting" />
         <p-btn
           v-if="content.length < 10"
           size="16px"
@@ -21,10 +20,14 @@
       </div>
     </div>
     <p-separator />
+
     <div class="row content">
+      <pSkeleton :model="requestWaiting && content.length == 0" />
+      <pSkeleton :model="requestWaiting && content.length == 0" />
+
       <p-card
         class="card full-width row justify-center items-center"
-        v-if="content.length == 0"
+        v-if="!requestWaiting && content.length == 0"
       >
         <div class="card_default">Пока нет модулей</div>
       </p-card>
@@ -36,19 +39,20 @@
         <div class="card_info">
           Тип <b>{{ currentType(item.type) }}</b>
         </div>
-        <div
+        <!-- <div
           class="card_info"
           v-if="item.type == 1 && item.data.validator != ''"
         >
           <b>{{ currentSettings(item.data.validator) }}</b>
-        </div>
+        </div> -->
         <div class="card_info" v-if="item.type == 1 && item.data.message != ''">
           <b>{{ currentSettings(item.data.message) }}</b>
         </div>
         <div class="card_info" v-if="item.type == 2">
-          <b>{{ currentSettings(item.data.extensions) }}</b>
+          Расширения : <b>{{ currentSettings(item.data.extensions) }}</b>
         </div>
         <div class="card_info" v-if="item.type == 2">
+          Максимальный размер :
           <b>{{ (item.data.size / 10e5).toFixed(2) }} Mb</b>
         </div>
         <div class="card_info" v-if="item.type == 3">
@@ -84,23 +88,25 @@
             "
           />
           <p-btn
+            @click="requestModuleUp(item.sort)"
             v-if="index > 0"
             padding="4px 4pxpx"
             color="transparent"
-            title="Поднять выше"
+            title="Поднять"
             ><div class="arrow_up"></div
           ></p-btn>
           <p-btn
+            @click="requestModuleDown(item.sort)"
             v-if="index + 1 != content.length"
             padding="4px 4pxpx"
             color="transparent"
-            title="Опустить ниже"
+            title="Опустить"
             ><div class="arrow_down"></div
           ></p-btn>
         </div>
       </pCard>
       <p-card
-        v-if="content.length < 10"
+        v-if="!requestWaiting && content.length < 10"
         @click="moduleDial = !moduleDial"
         class="card full-width row justify-center items-center hoverable"
       >
@@ -112,6 +118,7 @@
   <feedSettingsDialog
     :model="settings"
     :render="select"
+    :spinner="requestWaiting"
     @closeSettings="closeDialog"
     @deleteModule="requestDeleteInput"
     @saveTextInput="requestUpdateInputText"
@@ -120,6 +127,8 @@
     @addNewOption="requestAddNewOption"
     @deleteOption="requestDeleteOption"
     @editOption="requestUpdateOption"
+    @optionDown="requestOptionDown"
+    @optionUp="requestOptionUp"
   />
 
   <newModuleDialog
@@ -132,13 +141,14 @@
 <script>
 import axios from "axios";
 
-import { ref, reactive } from "vue";
+import { ref } from "vue";
 
 import pBtn from "./components/pBtn.vue";
 import pCard from "./components/pCard.vue";
 import pHeader from "./components/pHeader.vue";
 import pSeparator from "./components/pSeparator.vue";
 import pSpinner from "./components/pSpinner.vue";
+import pSkeleton from "./components/pSkeleton.vue";
 
 import newModuleDialog from "./components/createNewModule.vue";
 import feedSettingsDialog from "./components/feedSettings.vue";
@@ -154,6 +164,7 @@ export default {
     newModuleDialog,
     pSeparator,
     pSpinner,
+    pSkeleton,
   },
   setup() {
     return {
@@ -162,8 +173,16 @@ export default {
       deleteDial: ref(false),
       requestWaiting: ref(false),
       select: ref({}),
-      content: reactive([]),
+      content: ref([]),
     };
+  },
+  watch: {
+    content() {
+      this.select = this.content.filter((item) => item.id == this.select.id)[0];
+      if (this.select == undefined) {
+        this.select = {};
+      }
+    },
   },
   methods: {
     closeDialog(dialog) {
@@ -187,12 +206,12 @@ export default {
       return [...(item + "")].splice(0, 10).join("") + "...";
     },
     currentCountOptions(options) {
-      let currentIndexs = 2;
+      let currentIndexes = 2;
       if (options.length == 1) {
-        currentIndexs--;
+        currentIndexes--;
       }
       let arr = [];
-      for (let i = 0; i < currentIndexs; i++) {
+      for (let i = 0; i < currentIndexes; i++) {
         arr.push(options[i]);
       }
       if (options.length > 2) {
@@ -514,9 +533,6 @@ export default {
 }
 .content {
   padding: 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
 }
 .header {
   background: #0000001a;
@@ -533,15 +549,18 @@ export default {
 }
 .card {
   width: 100%;
-  max-width: 700px;
-  margin: 5px;
+  max-width: 1000px;
+  margin: 5px auto;
   flex-grow: 1;
   transition: 0.3s background;
   position: relative;
   border-radius: 30px;
   &_answer {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
     padding: 2px 8px;
-    margin: 0 3px;
+    margin: 3px;
     border-radius: 4px;
     background: #aaa;
     font-size: 14px;
@@ -564,7 +583,7 @@ export default {
     overflow: hidden;
     font-size: 20px;
     font-weight: 500;
-    padding: 14px;
+    padding: 14px 20px;
 
     z-index: 2;
   }
@@ -584,19 +603,30 @@ export default {
       position: absolute;
       top: 30px;
       right: 50px;
+      background: #fff;
+      border-radius: 20px;
       font-weight: 700;
-      font-size: 52px;
+      font-size: 40px;
+      width: 45px;
+      height: 45px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
       color: #aaa;
     }
   }
   &_info {
-    z-index: 2;
-    font-size: 16px;
-    background: #ddd;
+    width: 100%;
+    max-width: 95%;
+    margin: 8px auto;
+    background: #eee;
+    font-size: 14px;
+    background: #eee;
     color: #444;
     padding: 3px 0;
     padding-left: 30px;
-    margin: 5px 0;
+
+    border-radius: 5px;
   }
   &_close {
     width: 20px;
@@ -622,6 +652,17 @@ export default {
 .row {
   display: flex;
   flex-wrap: wrap;
+}
+.list-move, /* apply transition to moving elements */
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.5s ease;
+}
+
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: translateX(30px);
 }
 .justify {
   &-center {
@@ -659,10 +700,19 @@ export default {
   .content {
     justify-content: center;
   }
+  .card {
+    width: 100%;
+  }
 }
 @media (max-width: 400px) {
   .card_index_item {
     right: 10px;
+    top: 35px;
+    width: 40px;
+    height: 40px;
+  }
+  .area {
+    padding: 65px 10px;
   }
 }
 </style>

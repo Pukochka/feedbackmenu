@@ -32,7 +32,7 @@ export default {
   text-align: center;
 }
 .spinner {
-  color: rgb(229, 231, 235);
+  color: rgb(255, 255, 255);
   height: 20px;
   width: 20px;
   fill: #1c64f2;
