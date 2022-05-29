@@ -7,7 +7,6 @@
         </div>
 
         <div class="row items-center">
-          <pSpinner :model="spinner" />
           <p-btn color="transparent" @click="closeSettings"
             ><div class="card_close"></div
           ></p-btn>
@@ -15,10 +14,10 @@
       </div>
       <pSeparator />
       <div class="card_container">
-        <div class="status" v-if="!spinner">
+        <div class="status row justify-center" v-if="!spinner">
           Все изменения успешно сохранены
         </div>
-        <div class="status pro" v-if="spinner">
+        <div class="status pro row justify-center" v-if="spinner">
           Изменение в процессе сохранение
         </div>
         <div class="card_container_item" v-if="render.type == 1">
@@ -282,7 +281,7 @@
   </pDownDialog>
 
   <pDownDialog :model="editAnswerDial">
-    <p-card class="card min">
+    <p-card class="card">
       <div class="card_header">Изменение ответа</div>
       <p-separator />
       <div class="card_container_item" style="padding: 20px">
@@ -313,7 +312,7 @@
   </pDownDialog>
 
   <pDownDialog :model="optionsDelete">
-    <p-card class="card min">
+    <p-card class="card">
       <div class="card_container">
         Вы уверены что хотите удалить <b>{{ selectDeleteOption }}</b> ?
       </div>
@@ -355,7 +354,6 @@ import pInput from "./pInput.vue";
 import pInputRequired from "./pInputRequired.vue";
 import pSelect from "./pSelect.vue";
 import pSlider from "./pSlider.vue";
-import pSpinner from "./pSpinner.vue";
 
 import deleteDialog from "./deleteDialog.vue";
 
@@ -371,7 +369,6 @@ export default {
     deleteDialog,
     pSelect,
     pSlider,
-    pSpinner,
   },
   emits: [
     "closeSettings",
@@ -413,7 +410,7 @@ export default {
       selectExtensionValue: ref([]),
       selectValidatorsValue: ref(""),
       selectValidatorsValidate: ref(""),
-      selectValidatorsEdit: ref(true),
+      selectValidatorsEdit: ref(false),
       validations: ref([
         {
           name: "Нет",
@@ -540,7 +537,6 @@ export default {
         is_multiple: false,
         confirm: false,
       }),
-
       danger: ref({
         extension: false,
         size: false,
@@ -548,11 +544,15 @@ export default {
       extensions: ref([
         {
           select: false,
+          name: "Все",
+        },
+        {
+          select: false,
           name: "txt",
         },
         {
           select: false,
-          name: "jpg",
+          name: "doc",
         },
         {
           select: false,
@@ -560,7 +560,23 @@ export default {
         },
         {
           select: false,
+          name: "pdf",
+        },
+        {
+          select: false,
           name: "pptx",
+        },
+        {
+          select: false,
+          name: "xls",
+        },
+        {
+          select: false,
+          name: "xlsx",
+        },
+        {
+          select: false,
+          name: "jpg",
         },
         {
           select: false,
@@ -568,7 +584,63 @@ export default {
         },
         {
           select: false,
+          name: "tif",
+        },
+        {
+          select: false,
+          name: "bmp",
+        },
+        {
+          select: false,
           name: "gif",
+        },
+        {
+          select: false,
+          name: "webp",
+        },
+        {
+          select: false,
+          name: "avif",
+        },
+        {
+          select: false,
+          name: "jfif",
+        },
+        {
+          select: false,
+          name: "rar",
+        },
+        {
+          select: false,
+          name: "zip",
+        },
+        {
+          select: false,
+          name: "mp3",
+        },
+        {
+          select: false,
+          name: "wav",
+        },
+        {
+          select: false,
+          name: "mp4",
+        },
+        {
+          select: false,
+          name: "avi",
+        },
+        {
+          select: false,
+          name: "html",
+        },
+        {
+          select: false,
+          name: "css",
+        },
+        {
+          select: false,
+          name: "js",
         },
       ]),
     };
@@ -603,13 +675,39 @@ export default {
         if (this.selectExtensionValue.length == 1) {
           return;
         }
+        if (item.name == "Все") {
+          this.extensions.forEach((ex) => {
+            ex.select = false;
+          });
+          this.selectExtensionValue = [];
+        }
         item.select = false;
         this.selectExtensionValue = this.selectExtensionValue.filter(
           (ext) => ext != item.name
         );
       } else {
-        item.select = true;
-        this.selectExtensionValue.push(item.name);
+        if (item.name == "Все") {
+          this.extensions.forEach((ex) => {
+            ex.select = false;
+          });
+          this.selectExtensionValue = [];
+          item.select = true;
+          this.selectExtensionValue.push(item.name);
+        } else {
+          this.selectExtensionValue.forEach((val) => {
+            if (val == "Все") {
+              this.selectExtensionValue.splice(
+                this.selectExtensionValue.indexOf(val),
+                1
+              );
+              this.extensions.filter(
+                (ext) => ext.name == val
+              )[0].select = false;
+            }
+          });
+          item.select = true;
+          this.selectExtensionValue.push(item.name);
+        }
       }
     },
     selectValidators(item) {
@@ -640,7 +738,9 @@ export default {
           this.file.value,
           this.renderSettings.confirm,
           this.size.value * 10e5,
-          this.selectExtensionValue.join(", ")
+          this.selectExtensionValue[0] == "Все"
+            ? ""
+            : this.selectExtensionValue.join(", ")
         );
       } else if (this.render.type == 3) {
         this.$emit(
@@ -707,20 +807,24 @@ export default {
       return (this.render.data.size / 1e6).toFixed(2);
     },
     convertToArray() {
-      let a = this.render.data.extensions.replace(/,/gi, "");
-      let myindex = 0;
-      let arr = [];
-      let str = "";
-      for (let l of [...a]) {
-        if (l == " ") {
-          myindex++;
-          str = "";
-        } else {
-          str += l;
-          arr[myindex] = str;
+      if (this.render.data.extensions == "") {
+        return ["Все"];
+      } else {
+        let a = this.render.data.extensions.replace(/,/gi, "");
+        let myindex = 0;
+        let arr = [];
+        let str = "";
+        for (let l of [...a]) {
+          if (l == " ") {
+            myindex++;
+            str = "";
+          } else {
+            str += l;
+            arr[myindex] = str;
+          }
         }
+        return arr;
       }
-      return arr;
     },
   },
   mounted() {},
@@ -787,6 +891,7 @@ export default {
 .file_maxsize,
 .file_extensions {
   padding: 6px;
+  width: 50%;
   &_inner {
     padding: 5px;
   }
@@ -960,6 +1065,10 @@ input[type="range"]::-webkit-slider-runnable-track {
 @media (max-width: 768px) {
   .card {
     width: 80%;
+  }
+  .file_maxsize,
+  .file_extensions {
+    width: 100%;
   }
 }
 @media (max-width: 424px) {

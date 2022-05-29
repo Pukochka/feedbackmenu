@@ -1,5 +1,5 @@
 <template>
-  <pCard class="card loading" v-if="model">
+  <pCard class="card loading">
     <div class="h_skeleton"></div>
     <div class="p_skeleton"></div>
     <div class="p_skeleton"></div>
@@ -14,16 +14,7 @@ export default {
   },
   methods: {},
   mounted() {},
-  props: {
-    model: {
-      type: Boolean,
-      required: false,
-    },
-    count: {
-      type: Number,
-      required: false,
-    },
-  },
+  props: {},
 };
 </script>
 <style lang="scss" scoped>

@@ -32,90 +32,41 @@ export default {
 </script>
 <style lang="scss" scoped>
 input[type="range"] {
-  height: 25px;
-  -webkit-appearance: none;
-  margin: 10px 0;
+  overflow: hidden;
   width: 95%;
-}
-input[type="range"]:focus {
-  outline: none;
-}
-input[type="range"]::-webkit-slider-runnable-track {
-  width: 100%;
-  height: 5px;
-  cursor: pointer;
-  box-shadow: 0px 0px 0px #000000;
-  background: #ccc;
-  border-radius: 1px;
-  border: 0px solid #000000;
-}
-input[type="range"]::-webkit-slider-thumb {
-  box-shadow: 0px 0px 0px #000000;
-  border: 1px solid #ccc;
-  height: 18px;
-  width: 18px;
-  border-radius: 25px;
-  background: #a1d0ff;
-  cursor: pointer;
   -webkit-appearance: none;
-  margin-top: -7px;
+  background-color: #00e1ff;
+  border-radius: 4px;
 }
-input[type="range"]:focus::-webkit-slider-runnable-track {
-  background: #ccc;
+
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 10px;
+  -webkit-appearance: none;
+  color: #ccc;
+  margin-top: -1px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  width: 20px;
+  -webkit-appearance: none;
+  height: 10px;
+  border-radius: 4px;
+  cursor: ew-resize;
+  background: #434343;
+  box-shadow: 1000px 0 0 1000px #ccc;
+}
+
+input[type="range"]::-moz-range-progress {
+  background-color: #ccc;
 }
 input[type="range"]::-moz-range-track {
-  width: 100%;
-  height: 5px;
-  cursor: pointer;
-  box-shadow: 0px 0px 0px #000000;
-  background: #ccc;
-  border-radius: 1px;
-  border: 0px solid #000000;
-}
-input[type="range"]::-moz-range-thumb {
-  box-shadow: 0px 0px 0px #000000;
-  border: 1px solid #ccc;
-  height: 18px;
-  width: 18px;
-  border-radius: 25px;
-  background: #a1d0ff;
-  cursor: pointer;
-}
-input[type="range"]::-ms-track {
-  width: 100%;
-  height: 5px;
-  cursor: pointer;
-  background: transparent;
-  border-color: transparent;
-  color: transparent;
+  background-color: #00e1ff;
 }
 input[type="range"]::-ms-fill-lower {
-  background: #ccc;
-  border: 0px solid #000000;
-  border-radius: 2px;
-  box-shadow: 0px 0px 0px #000000;
+  background-color: #ccc;
 }
 input[type="range"]::-ms-fill-upper {
-  background: #ccc;
-  border: 0px solid #000000;
-  border-radius: 2px;
-  box-shadow: 0px 0px 0px #000000;
-}
-input[type="range"]::-ms-thumb {
-  margin-top: 1px;
-  box-shadow: 0px 0px 0px #000000;
-  border: 1px solid #ccc;
-  height: 18px;
-  width: 18px;
-  border-radius: 25px;
-  background: #a1d0ff;
-  cursor: pointer;
-}
-input[type="range"]:focus::-ms-fill-lower {
-  background: #ccc;
-}
-input[type="range"]:focus::-ms-fill-upper {
-  background: #ccc;
+  background-color: #00e1ff;
 }
 @media (max-width: 768px) {
   input[type="range"] {

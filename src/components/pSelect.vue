@@ -51,11 +51,9 @@ export default {
       required: false,
     },
   },
+  computed: {},
   watch: {},
-  methods: {
-    show() {},
-    noShow() {},
-  },
+  methods: {},
   mounted() {},
 };
 </script>
@@ -64,6 +62,10 @@ export default {
   &_content {
     width: 100%;
     height: 100%;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 80%;
+    overflow: hidden;
   }
   &_select {
     cursor: pointer;
