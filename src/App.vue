@@ -9,7 +9,7 @@
       <div class="area_header">Ваши модули</div>
       <div class="row items-center">
         <p-btn
-          v-if="content.length < 10"
+          v-if="!requestWaiting && content.length < 10"
           size="16px"
           padding="4px 8px"
           color="transparent"
@@ -22,8 +22,11 @@
     <p-separator />
 
     <div class="row content">
-      <pSkeleton :model="requestWaiting && content.length == 0" />
-      <pSkeleton :model="requestWaiting && content.length == 0" />
+      <pSkeleton
+        v-show="requestWaiting && content.length == 0"
+        v-for="(item, index) in 5"
+        :key="index"
+      />
 
       <p-card
         class="card full-width row justify-center items-center"
@@ -39,12 +42,6 @@
         <div class="card_info">
           Тип <b>{{ currentType(item.type) }}</b>
         </div>
-        <!-- <div
-          class="card_info"
-          v-if="item.type == 1 && item.data.validator != ''"
-        >
-          <b>{{ currentSettings(item.data.validator) }}</b>
-        </div> -->
         <div class="card_info" v-if="item.type == 1 && item.data.message != ''">
           <b>{{ currentSettings(item.data.message) }}</b>
         </div>
@@ -73,8 +70,6 @@
               {{ opt.text }}
             </div>
           </div>
-
-          <b>{{}} </b>
         </div>
 
         <div class="card_actions">
@@ -704,15 +699,17 @@ export default {
     width: 100%;
   }
 }
+@media (max-width: 500px) {
+  .area {
+    padding: 65px 10px;
+  }
+}
 @media (max-width: 400px) {
   .card_index_item {
     right: 10px;
     top: 35px;
     width: 40px;
     height: 40px;
-  }
-  .area {
-    padding: 65px 10px;
   }
 }
 </style>
